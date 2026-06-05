@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="AI-Powered Question Generator — Upload any document, generate intelligent questions instantly">
+<title>QuestionGenius AI Pro</title>
+
+<!-- Google Fonts: Exo 2 + Mulish -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5.3 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome 6 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<!-- Animate.css -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+<!-- Processing Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* =============================================
+   CSS VARIABLES — NEURAL COSMOS THEME
+   ============================================= */
+:root {
+  /* 
+   * THE BASE: "Carbon & Ink" 
+   * We use a slightly off-black for the dark background to make 
+   * the true-black shadows (#000) look physically deeper.
+   */
+  --bg:          #121212;
+  --bg2:         #1a1a1a;
+  
+  /* SURFACES: High-contrast elevation */
+  --surface:     #1e1e1e;
+  --surface2:    #252525;
+  --glass:       #1e1e1e; 
+  
+  /* BORDERS: The "Ink" line. Thicker (2px) is more advanced than 1px. */
+  --border:      #000000;
+  --border2:     #222222;
+  
+  /* 
+   * ACCENTS: "Vivid Saturates" 
+   * These are calibrated to "pop" against the dark carbon background.
+   */
+  --primary:     #6366f1; /* Electric Indigo */
+  --primary-glow:#6366f1; 
+  --cyan:        #00d2ff;
+  --cyan-glow:   #00d2ff;
+  --rose:        #ff4757;
+  --gold:        #ffa502;
+  --green:       #2ed573;
+  
+  /* TYPOGRAPHY */
+  --text:        #ffffff;
+  --muted:       #71717a;
+  
+  /* 
+   * THE BRUTALIST SIGNATURE: "The Offset"
+   * Advanced shadows use a clean 4px/4px or 8px/8px offset with 0 blur.
+   */
+  --radius:      0px;      /* Sharp 0px corners look more 'Architectural' */
+  --radius-lg:   0px;
+  --shadow:      4px 4px 0px #000000;
+  --shadow-glow: 4px 4px 0px var(--primary);
+  
+  /* ANIMATION: The "Mechanical" Snap */
+  --font-head:   'Exo 2', sans-serif;
+  --font-body:   'Mulish', sans-serif;
+  --transition:  0.12s cubic-bezier(0, 0, 0, 1);
+}
+
+[data-theme="light"] {
+  /* 
+   * THE BASE: "Gallery White"
+   * A very slight warm grey that feels more expensive than pure white.
+   */
+  --bg:        #f4f4f4;
+  --bg2:       #e5e5e5;
+  
+  --surface:   #ffffff;
+  --surface2:  #f9f9f9;
+  --glass:     #ffffff; 
+  
+  /* ACCENTS: Slightly deeper tones for readability on light */
+  --primary:   #4f46e5;
+  
+  --border:    #000000;
+  --border2:   #000000;
+  --text:      #000000;
+  --muted:     #52525b;
+  
+  --shadow:    4px 4px 0px #000000;
+}
+
+/* =============================================
+   RESET & BASE
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background var(--transition), color var(--transition);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =============================================
+   CANVAS BACKGROUND
+   ============================================= */
+#neural-canvas {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
+  opacity: 0.55;
+}
+
+/* =============================================
+   SCROLL PROGRESS
+   ============================================= */
+#scroll-bar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  z-index: 9999; transition: width 0.1s;
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* =============================================
+   GLASS CARD
+   ============================================= */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* =============================================
+   NAVBAR
+   ============================================= */
+.navbar-wrap {
+  background: rgba(4,4,13,0.82);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 1000;
+  padding: 14px 20px;
+}
+[data-theme="light"] .navbar-wrap {
+  background: rgba(240,240,250,0.9);
+}
+.brand-logo {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px var(--primary-glow);
+  flex-shrink: 0;
+}
+.brand-name {
+  font-family: var(--font-head);
+  font-weight: 800; font-size: 1.15rem;
+  background: linear-gradient(90deg, #c4b5fd, var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.3px;
+}
+.brand-sub {
+  font-size: 0.68rem; color: var(--muted); font-weight: 500;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.nav-icon-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); font-size: 15px;
+  transition: all var(--transition); flex-shrink: 0;
+  text-decoration: none;
+}
+.nav-icon-btn:hover {
+  background: var(--primary); color: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 16px var(--primary-glow);
+}
+
+/* --- HERO SECTION LAYOUT --- */
+.hero-section {
+  background-color: var(--bg);
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  overflow: hidden;
+  border-bottom: 2px solid var(--border);
+}
+
+.hero-container {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 4rem;
+  max-width: 1280px;
+  width: 100%;
+  align-items: center;
+}
+
+/* --- LEFT COLUMN: CONTENT --- */
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.badge-row {
+  margin-bottom: 1.5rem;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 6px 14px;
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ping {
+  width: 8px;
+  height: 8px;
+  background-color: var(--green);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 8px var(--green);
+}
+
+.hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0 0 1.5rem 0;
+  text-transform: uppercase;
+}
+
+.text-accent {
+  color: var(--primary);
+  -webkit-text-stroke: 1px var(--border); /* Optional crisp outline layer */
+}
+
+.hero-sub {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 540px;
+  margin: 0 0 2.5rem 0;
+}
+
+/* --- MECHANICAL BUTTONS --- */
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.btn {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 14px 28px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 4px 4px 0px var(--border);
+}
+
+.btn-primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border);
+}
+
+.btn-primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px var(--border);
+}
+
+.btn-secondary {
+  background-color: var(--surface);
+  color: var(--text);
+  box-shadow: 4px 4px 0px var(--border);
+}
+
+.btn-secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border);
+  background-color: var(--surface2);
+}
+
+.btn-secondary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px var(--border);
+}
+
+/* --- RIGHT COLUMN: ADVANCED VIDEO COMPONENT --- */
+.hero-video-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.video-window {
+  background-color: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); /* Strict 4px solid black drop shadow */
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+/* Interactive element: Card lifts when user engages with it */
+.video-window:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0px var(--border);
+}
+
+.video-toolbar {
+  background-color: var(--bg2);
+  border-bottom: 2px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--border);
+  border: 1px solid var(--text);
+  border-radius: 50%;
+}
+
+.toolbar-title {
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.video-container {
+  width: 100%;
+  aspect-ratio: 16 / 10; /* Perfectly proportioned studio rectangle */
+  background-color: #000000;
+  display: flex;
+}
+
+.hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(10%) contrast(105%); /* High-end studio grading color effect */
+}
+
+/* --- MOBILE RESPONSIVENESS OVERRIDE --- */
+@media (max-width: 968px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+  
+  .hero-content {
+    align-items: center;
+  }
+  
+  .hero-actions {
+    justify-content: center;
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* =============================================
+   STAT CARDS
+   ============================================= */
+
+/* --- PREMIUM ARCHITECTURE VARIATION TOKENS --- */
+:root {
+  --surface-base: rgb(0, 0, 0);
+  --border-premium: rgba(255, 255, 255, 0.06);
+  --text-primary-modern: #f3f4f6;
+  --text-muted-modern: #9ca3af;
+  --panel-radius: 16px;
+  --card-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stats-grid-wrapper {
+  padding: 1rem 0;
+  perspective: 1200px;
+}
+
+/* --- THE CARD ENGINE --- */
+.premium-stat-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%), var(--surface-base);
+  border: 1px solid var(--border-premium);
+  border-radius: var(--panel-radius);
+  padding: 22px 24px;
+  min-height: 125px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 24px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition: var(--card-transition);
+}
+
+/* Ultra-Fine Structural Border Highlight Layer */
+.premium-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--panel-radius);
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.02) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Spotlight Ambient Background Blur Aura */
+.card-glow-effect {
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
+  opacity: 0.15;
+  filter: blur(30px);
+  z-index: 1;
+  transition: var(--card-transition);
+  pointer-events: none;
+}
+
+.card-content-wrapper {
+  z-index: 3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* --- INNER LAYOUT & TYPOGRAPHY --- */
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-label-modern {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted-modern);
+}
+
+.stat-icon-glow {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 6px rgba(255, 255, 255, 0.05);
+  transition: var(--card-transition);
+}
+
+.stat-card-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.stat-value-modern {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 750;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  /* Prevent layout layout jumpiness on numbers update */
+  font-variant-numeric: tabular-nums; 
+  background: linear-gradient(135deg, var(--text-primary-modern) 30%, rgba(255, 255, 255, 0.5) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Target Layout Variant for strings rather than pure metrics numbers */
+.model-text-spec {
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  padding-bottom: 2px;
+}
+
+/* Meta Labels & Modern SaaS Badge Elements */
+.stat-meta-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.stat-meta-trend.positive { color: #a78bfa; }
+.stat-meta-trend.neutral { color: #34d399; }
+.stat-meta-trend.optimize { color: #fbbf24; }
+
+/* --- INTERACTIVE STATE ARCHITECTURE (HOVER) --- */
+.premium-stat-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 20px 38px -10px rgba(0, 0, 0, 0.5),
+    0 0 25px -5px var(--accent-glow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.premium-stat-card:hover .card-glow-effect {
+  opacity: 0.35;
+  transform: scale(1.3) translate(-10%, -10%);
+}
+
+.premium-stat-card:hover .stat-icon-glow {
+  transform: scale(1.08);
+  background: var(--accent-grad) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+/* Glassmorphic Fallback for older browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .premium-stat-card {
+    background: #111726;
+  }
+}
+
+/* =============================================
+   MAIN PANEL + TABS
+   ============================================= */
+.main-panel {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+}
+.tab-rail {
+  display: flex; gap: 4px; padding: 6px;
+  background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.tab-rail::-webkit-scrollbar { display: none; }
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 10px; border: none;
+  background: transparent; color: var(--muted);
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: all var(--transition); letter-spacing: 0.02em;
+}
+.tab-btn i { font-size: 0.8rem; }
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  color: white;
+  box-shadow: 0 4px 16px var(--primary-glow), 0 0 0 1px var(--primary);
+}
+.tab-btn:not(.active):hover { background: var(--surface2); color: var(--text); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.panel-body { padding: clamp(16px,4vw,28px); }
+
+/* =============================================
+   DROP ZONE
+   ============================================= */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius); padding: 40px 20px;
+  text-align: center; cursor: pointer;
+  background: var(--surface); position: relative;
+  transition: all var(--transition); overflow: hidden;
+}
+.drop-zone::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at center, var(--primary-glow) 0%, transparent 70%);
+  opacity: 0; transition: opacity var(--transition);
+}
+.drop-zone:hover::before, .drop-zone.drag-active::before { opacity: 1; }
+.drop-zone:hover, .drop-zone.drag-active {
+  border-color: var(--primary);
+  box-shadow: 0 0 30px var(--primary-glow);
+}
+.dz-icon-wrap {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.15));
+  border: 1px solid rgba(124,58,237,0.3);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 2rem; color: var(--primary);
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.dz-title { font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; }
+.dz-sub { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+.file-badge {
+  display: inline-block; padding: 4px 10px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;
+  margin: 3px;
+}
+
+/* =============================================
+   OPTION SECTIONS
+   ============================================= */
+.option-card {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 18px;
+}
+.option-card h4 {
+  font-family: var(--font-head); font-weight: 700; font-size: 0.9rem;
+  letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.option-card h4 i { font-size: 0.85rem; }
+
+/* Custom checkbox */
+.chk-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; cursor: pointer; font-size: 0.87rem; font-weight: 500;
+  color: var(--text);
+}
+.chk-box {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+  border: 2px solid var(--border2); appearance: none; cursor: pointer;
+  background: var(--surface); transition: all 0.2s; position: relative;
+}
+.chk-box:checked {
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  border-color: var(--primary);
+}
+.chk-box:checked::after {
+  content: '✓'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 900;
+}
+
+/* Difficulty pills */
+.diff-pill {
+  flex: 1; padding: 8px 4px; border-radius: 8px; border: 2px solid;
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  transition: all var(--transition); background: transparent;
+  letter-spacing: 0.04em;
+}
+.diff-pill[data-d="easy"]   { border-color: var(--green); color: var(--green); }
+.diff-pill[data-d="medium"] { border-color: var(--gold); color: var(--gold); }
+.diff-pill[data-d="hard"]   { border-color: var(--rose); color: var(--rose); }
+.diff-pill.selected[data-d="easy"]   { background: rgba(52,211,153,0.15); }
+.diff-pill.selected[data-d="medium"] { background: rgba(251,191,36,0.15); }
+.diff-pill.selected[data-d="hard"]   { background: rgba(251,113,133,0.15); }
+
+/* Number stepper */
+.num-stepper {
+  display: flex; align-items: center; gap: 0;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; overflow: hidden;
+}
+.num-stepper button {
+  width: 38px; height: 38px; border: none; background: var(--surface2);
+  color: var(--text); font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+}
+.num-stepper button:hover { background: var(--primary); color: white; }
+.num-stepper span {
+  flex: 1; text-align: center; font-family: var(--font-head);
+  font-weight: 800; font-size: 1.1rem; color: var(--text); min-width: 48px;
+}
+
+/* Custom select */
+select.custom-sel {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border2); border-radius: 8px;
+  padding: 9px 12px; width: 100%; font-size: 0.85rem;
+  font-family: var(--font-body); font-weight: 500;
+  cursor: pointer; outline: none;
+  appearance: none; -webkit-appearance: none;
+}
+select.custom-sel:focus { border-color: var(--primary); }
+
+/* Custom textarea / input */
+textarea.custom-inp, input.custom-inp {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border2); border-radius: 8px;
+  padding: 10px 14px; width: 100%; font-size: 0.85rem;
+  font-family: var(--font-body); font-weight: 500; outline: none;
+  transition: border-color 0.2s; resize: vertical;
+}
+textarea.custom-inp:focus, input.custom-inp:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+input[type="password"].custom-inp { resize: none; }
+
+/* Range */
+input[type="range"] {
+  -webkit-appearance: none; width: 100%; height: 5px;
+  background: var(--border); border-radius: 3px; outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--primary); cursor: pointer;
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+.btn-neon {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 13px 28px; border-radius: 12px;
+  font-family: var(--font-head); font-weight: 700; font-size: 0.95rem;
+  letter-spacing: 0.04em; cursor: pointer; border: none;
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  color: white; transition: all var(--transition); width: 100%;
+  box-shadow: 0 4px 24px var(--primary-glow);
+  position: relative; overflow: hidden;
+}
+.btn-neon::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.btn-neon:hover::after { opacity: 1; }
+.btn-neon:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--primary-glow);
+}
+.btn-neon:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn-neon:active { transform: scale(0.98); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; padding: 9px 18px; border-radius: 10px;
+  font-family: var(--font-body); font-weight: 600; font-size: 0.82rem;
+  cursor: pointer; border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text);
+  transition: all var(--transition); text-decoration: none;
+}
+.btn-ghost:hover {
+  background: var(--primary); color: white;
+  border-color: var(--primary); box-shadow: 0 0 16px var(--primary-glow);
+}
+.btn-ghost.sm { padding: 7px 14px; font-size: 0.78rem; }
+
+/* =============================================
+   PROGRESS / LOADING
+   ============================================= */
+.prog-bar-wrap {
+  height: 5px; border-radius: 3px;
+  background: rgba(255,255,255,0.08); overflow: hidden;
+}
+.prog-bar {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  transition: width 0.4s ease;
+  box-shadow: 0 0 10px var(--cyan-glow);
+}
+
+/* =============================================
+   LOADING OVERLAY
+   ============================================= */
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4,4,13,0.88);
+  backdrop-filter: blur(12px);
+}
+.loader-card {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 40px 36px;
+  text-align: center; max-width: 360px; width: 92%;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 0 60px var(--primary-glow), var(--shadow);
+}
+.orbital-ring {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--primary); border-right-color: var(--cyan);
+  animation: orbital-spin 1s linear infinite;
+  margin: 0 auto 6px; position: relative;
+}
+.orbital-ring::after {
+  content: ''; position: absolute; inset: 8px;
+  border-radius: 50%; border: 2px solid transparent;
+  border-top-color: var(--rose); border-left-color: var(--gold);
+  animation: orbital-spin 0.75s linear infinite reverse;
+}
+@keyframes orbital-spin { to { transform: rotate(360deg); } }
+.loader-title {
+  font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; margin-top: 10px;
+}
+#loader-status { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+.fun-fact-box {
+  margin-top: 18px; padding: 12px 14px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  font-size: 0.78rem; color: var(--muted); text-align: left; line-height: 1.5;
+}
+
+/* =============================================
+   QUESTION CARDS
+   ============================================= */
+#results-section { margin-top: 24px; }
+.results-header {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.results-title {
+  font-family: var(--font-head); font-weight: 800; font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--text), #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.q-card {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 20px;
+  margin-bottom: 14px; opacity: 0; transform: translateY(16px);
+  transition: all 0.4s ease; position: relative; overflow: hidden;
+}
+.q-card.show { opacity: 1; transform: translateY(0); }
+.q-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--qtype-color, linear-gradient(180deg, var(--primary), var(--cyan)));
+}
+.q-card:hover { border-color: rgba(124,58,237,0.4); transform: translateX(2px); }
+.q-num {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-weight: 800; font-size: 0.85rem; color: white;
+}
+.type-badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 0.68rem;
+  font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.badge-mcq      { background: rgba(124,58,237,0.2); color: #c4b5fd; border: 1px solid rgba(124,58,237,0.3); }
+.badge-tf       { background: rgba(251,113,133,0.2); color: #fda4af; border: 1px solid rgba(251,113,133,0.3); }
+.badge-sa       { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+.badge-fib      { background: rgba(52,211,153,0.2); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+.badge-matching { background: rgba(251,191,36,0.2); color: #fde68a; border: 1px solid rgba(251,191,36,0.3); }
+
+.diff-chip {
+  padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+}
+.diff-chip.easy   { background: rgba(52,211,153,0.15); color: var(--green); }
+.diff-chip.medium { background: rgba(251,191,36,0.15); color: var(--gold); }
+.diff-chip.hard   { background: rgba(251,113,133,0.15); color: var(--rose); }
+
+.q-text { font-weight: 600; font-size: 0.92rem; line-height: 1.55; margin: 12px 0; }
+
+.opt-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 9px;
+  border: 1.5px solid var(--border2); background: var(--surface);
+  color: var(--text); cursor: pointer; transition: all 0.2s;
+  font-family: var(--font-body); font-size: 0.84rem; font-weight: 500;
+  width: 100%; text-align: left; margin-bottom: 8px;
+}
+.opt-btn:hover { border-color: var(--primary); background: rgba(124,58,237,0.08); }
+.opt-btn.correct { border-color: var(--green); background: rgba(52,211,153,0.1); }
+.opt-btn.wrong   { border-color: var(--rose); background: rgba(251,113,133,0.1); }
+.opt-letter {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.75rem; background: var(--surface2);
+}
+.reveal-box {
+  margin-top: 12px; padding: 12px 14px; border-radius: 9px;
+  background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25);
+  font-size: 0.82rem; line-height: 1.5; display: none;
+}
+.reveal-box.show { display: block; }
+.reveal-btn {
+  font-size: 0.76rem; padding: 5px 12px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--muted); cursor: pointer; transition: all 0.2s;
+  margin-top: 10px;
+}
+.reveal-btn:hover { color: var(--text); border-color: var(--primary); }
+
+/* Matching grid */
+.match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.match-term { padding: 10px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.25); color: #c4b5fd; }
+.match-def  { padding: 10px; border-radius: 8px; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--border2); }
+
+/* Fill blank inline input */
+.blank-input {
+  display: inline-block; width: 100px; border: none; border-bottom: 2px solid var(--primary);
+  background: transparent; color: var(--text); text-align: center; outline: none;
+  font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; padding: 0 4px;
+}
+
+/* =============================================
+   QUIZ MODE
+   ============================================= */
+.quiz-prog-label {
+  font-family: var(--font-head); font-size: 0.78rem;
+  letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
+}
+.score-ring {
+  width: 120px; height: 120px; position: relative; margin: 0 auto 16px;
+}
+.score-ring svg { transform: rotate(-90deg); }
+.score-txt {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.score-pct {
+  font-family: var(--font-head); font-weight: 900; font-size: 1.8rem;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* =============================================
+   TOAST
+   ============================================= */
+#toast-container {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px; max-width: 320px;
+}
+.toast-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 12px;
+  background: var(--glass); border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow); color: var(--text);
+  font-size: 0.83rem; font-weight: 500; min-width: 260px;
+  animation: toastIn 0.3s ease forwards;
+}
+@keyframes toastIn {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes toastOut {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+.toast-close {
+  margin-left: auto; cursor: pointer; opacity: 0.5;
+  font-size: 1rem; background: none; border: none; color: inherit;
+}
+
+/* =============================================
+   SETTINGS PANEL
+   ============================================= */
+.provider-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--border2); background: var(--surface);
+  color: var(--muted); font-size: 0.82rem; font-weight: 600;
+  transition: all var(--transition);
+}
+.provider-pill.active {
+  border-color: var(--primary); color: var(--primary);
+  background: rgba(124,58,237,0.1);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+.provider-pill .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted); transition: background 0.2s;
+}
+.provider-pill.active .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* Color swatches */
+.swatch {
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.2s;
+}
+.swatch:hover { transform: scale(1.2); }
+.swatch.active { border-color: white; box-shadow: 0 0 0 2px var(--primary); }
+
+/* =============================================
+   ANALYTICS
+   ============================================= */
+.chart-card {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 20px;
+}
+.chart-title {
+  font-family: var(--font-head); font-weight: 700; font-size: 0.88rem;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+  margin-bottom: 16px;
+}
+.activity-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.activity-table th {
+  padding: 10px 14px; text-align: left; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+  border-bottom: 1px solid var(--border2); font-weight: 700;
+}
+.activity-table td {
+  padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text); vertical-align: middle;
+}
+.status-dot {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700;
+}
+
+/* =============================================
+   MODAL
+   ============================================= */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-box {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 28px;
+  max-width: 520px; width: 100%;
+  backdrop-filter: blur(28px);
+  box-shadow: 0 0 60px var(--primary-glow), var(--shadow);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-title {
+  font-family: var(--font-head); font-weight: 800; font-size: 1.15rem;
+  background: linear-gradient(135deg, var(--text), #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* =============================================
+   FAB
+   ============================================= */
+#fab {
+  position: fixed; bottom: 24px; left: 24px; z-index: 998;
+  width: 50px; height: 50px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  border: none; color: white; font-size: 1.1rem; cursor: pointer;
+  box-shadow: 0 4px 20px var(--primary-glow); transition: all var(--transition);
+  display: none; align-items: center; justify-content: center;
+}
+#fab:hover { transform: scale(1.1) translateY(-2px); }
+
+/* =============================================
+   AI STATUS BADGE
+   ============================================= */
+.ai-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+  background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);
+  color: var(--green); letter-spacing: 0.04em;
+}
+.ai-badge .ping {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 6px var(--green);
+  animation: ping 1.5s ease infinite;
+}
+@keyframes ping {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.4); opacity: 0.6; }
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 767px) {
+  .hero-banner { padding: 22px 16px; }
+  .panel-body  { padding: 14px; }
+  .tab-btn { padding: 8px 12px; font-size: 0.76rem; }
+  .tab-btn span.label { display: none; }
+  .btn-ghost span.label { display: none; }
+  .match-grid { grid-template-columns: 1fr; }
+  .stat-value { font-size: 1.4rem; }
+}
+@media (max-width: 480px) {
+  .results-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* =============================================
+   LIGHT THEME OVERRIDES
+   ============================================= */
+[data-theme="light"] .hero-banner {
+  background: linear-gradient(135deg, #ede9fe 0%, #dbeafe 50%, #f0f9ff 100%);
+}
+[data-theme="light"] .hero-title {
+  background: linear-gradient(135deg, #4c1d95, var(--primary), #0891b2);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .hero-sub { color: rgba(0,0,0,0.55); }
+[data-theme="light"] .hero-icon { color: var(--primary); }
+[data-theme="light"] .tab-rail { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .brand-sub { color: #6b7280; }
+[data-theme="light"] #neural-canvas { opacity: 0.25; }
+[data-theme="light"] .glass { background: rgba(255,255,255,0.85); }
+[data-theme="light"] .main-panel { background: rgba(255,255,255,0.8); }
+[data-theme="light"] .loader-card { background: rgba(255,255,255,0.9); }
+[data-theme="light"] .toast-item { background: rgba(255,255,255,0.92); }
+[data-theme="light"] .modal-box { background: rgba(255,255,255,0.95); }
+
+/* Cursor glow effect */
+.cursor-glow {
+  position: fixed; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0; transform: translate(-50%,-50%);
+  transition: left 0.15s ease, top 0.15s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- Neural canvas background -->
+<canvas id="neural-canvas"></canvas>
+<!-- Cursor glow -->
+<div class="cursor-glow" id="cursor-glow"></div>
+<!-- Scroll bar -->
+<div id="scroll-bar" style="width:0"></div>
+<!-- Toast container -->
+<div id="toast-container"></div>
+<!-- FAB -->
+<button id="fab"><i class="fas fa-arrow-up"></i></button>
+
+<!-- ============================================================
+     NAVBAR
+     ============================================================ -->
+<div class="navbar-wrap">
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <!-- Brand -->
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <div class="brand-logo">
+        <i class="fas fa-brain" style="color:white;font-size:1.1rem"></i>
+      </div>
+      <div>
+        <div class="brand-name">QuestionGenius AI</div>
+        <div class="brand-sub">Neural Question Engine</div>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="nav-icon-btn" id="apiSetupBtn" title="AI Setup"><i class="fas fa-key"></i></button>
+      <button class="nav-icon-btn" id="themeBtn" title="Toggle Theme"><i class="fas fa-moon"></i></button>
+      <button class="nav-icon-btn" id="helpBtn" title="Help"><i class="fas fa-circle-question"></i></button>
+      <a href="index.html" class="nav-icon-btn" title="Go Back"><i class="fas fa-arrow-left"></i></a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN
+     ============================================================ -->
+<div style="max-width:1200px;margin:0 auto;padding:20px clamp(12px,4vw,24px) 80px">
+
+  <!-- HERO -->
+   <section class="hero-section">
+  <div class="hero-container">
+    
+    <div class="hero-content">
+      <div class="badge-row">
+        <span class="ai-badge" id="ai-badge">
+          <span class="ping"></span>AI READY · Groq · Llama 3.3
+        </span>
+      </div>
+      
+      <h1 class="hero-title">
+        Advanced AI <br>
+        <span class="text-accent">Question Generator</span>
+      </h1>
+      
+      <p class="hero-sub">
+        Upload any document → Groq · Llama 3.3 AI generates deep, exam-ready questions in seconds. Engineered for rigorous testing.
+      </p>
+      
+      <div class="hero-actions">
+        <button class="btn btn-primary">Upload Document</button>
+        <button class="btn btn-secondary">Explore Docs</button>
+      </div>
+    </div>
+
+    <div class="hero-video-wrapper">
+      <div class="video-window">
+        <div class="video-toolbar">
+          <div class="toolbar-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+          <div class="toolbar-title">Groq · Llama 3.3_generation_engine.mp4</div>
+        </div>
+        
+        <div class="video-container">
+          <video autoplay muted loop playsinline class="hero-video">
+            <source src="18069232-hd_1920_1080_24fps.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+  <!-- STATS GRID -->
+
+  <section class="stats-grid-wrapper">
+  <div class="row g-4">
+    
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="premium-stat-card" style="--accent-color: #8b5cf6; --accent-grad: linear-gradient(135deg, #7c3aed, #4f46e5); --accent-glow: rgba(124, 58, 237, 0.12);">
+        <div class="card-glow-effect"></div>
+        <div class="card-content-wrapper">
+          <div class="stat-card-header">
+            <span class="stat-label-modern">Docs Processed</span>
+            <div class="stat-icon-glow" style="background: rgba(124, 58, 237, 0.08); color: #a78bfa;">
+              <i class="fas fa-file-lines"></i>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value-modern" id="stat-docs">0</div>
+            <div class="stat-meta-trend positive">
+              <i class="fas fa-arrow-trend-up"></i> <span>Live Syncing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="premium-stat-card" style="--accent-color: #06b6d4; --accent-grad: linear-gradient(135deg, #06b6d4, #0891b2); --accent-glow: rgba(6, 182, 212, 0.12);">
+        <div class="card-glow-effect"></div>
+        <div class="card-content-wrapper">
+          <div class="stat-card-header">
+            <span class="stat-label-modern">Questions Made</span>
+            <div class="stat-icon-glow" style="background: rgba(6, 182, 212, 0.08); color: #22d3ee;">
+              <i class="fas fa-circle-question"></i>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value-modern" id="stat-qs">0</div>
+            <div class="stat-meta-trend positive">
+              <i class="fas fa-bolt"></i> <span>Auto-indexed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="premium-stat-card" style="--accent-color: #10b981; --accent-grad: linear-gradient(135deg, #10b981, #059669); --accent-glow: rgba(16, 185, 129, 0.12);">
+        <div class="card-glow-effect"></div>
+        <div class="card-content-wrapper">
+          <div class="stat-card-header">
+            <span class="stat-label-modern">Avg Time</span>
+            <div class="stat-icon-glow" style="background: rgba(16, 185, 129, 0.08); color: #34d399;">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value-modern" id="stat-time">0s</div>
+            <div class="stat-meta-trend neutral">
+              <i class="fas fa-gauge-high"></i> <span>P95 Latency</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="premium-stat-card" style="--accent-color: #f59e0b; --accent-grad: linear-gradient(135deg, #f59e0b, #d97706); --accent-glow: rgba(245, 158, 11, 0.12);">
+        <div class="card-glow-effect"></div>
+        <div class="card-content-wrapper">
+          <div class="stat-card-header">
+            <span class="stat-label-modern">AI Provider</span>
+            <div class="stat-icon-glow" style="background: rgba(245, 158, 11, 0.08); color: #fbbf24;">
+              <i class="fas fa-robot"></i>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value-modern model-text-spec" id="stat-model">Claude</div>
+            <div class="stat-meta-trend optimize">
+              <i class="fas fa-shield-halved"></i> <span>Enterprise</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+  <!-- MAIN PANEL -->
+  <div class="main-panel mb-4">
+    <!-- Tab rail -->
+    <div class="tab-rail">
+      <button class="tab-btn active" data-tab="upload"><i class="fas fa-cloud-arrow-up"></i><span class="label">Upload</span></button>
+      <button class="tab-btn" data-tab="settings"><i class="fas fa-sliders"></i><span class="label">Settings</span></button>
+      <button class="tab-btn" data-tab="quiz"><i class="fas fa-gamepad"></i><span class="label">Quiz Mode</span></button>
+      <button class="tab-btn" data-tab="analytics"><i class="fas fa-chart-bar"></i><span class="label">Analytics</span></button>
+    </div>
+
+    <!-- ======================== UPLOAD TAB ======================== -->
+    <div class="tab-pane active panel-body" id="pane-upload">
+
+      <!-- Drop zone -->
+      <div class="drop-zone mb-3" id="drop-zone">
+        <input type="file" id="file-input" style="display:none" accept=".pdf,.doc,.docx,.txt">
+        <div id="dz-default">
+          <div class="dz-icon-wrap"><i class="fas fa-cloud-arrow-up"></i></div>
+          <div class="dz-title">Drop your document here</div>
+          <div class="dz-sub">or click anywhere to browse files</div>
+          <div style="margin-top:12px">
+            <span class="file-badge" style="background:rgba(124,58,237,0.15);color:#c4b5fd;border:1px solid rgba(124,58,237,0.3)">PDF</span>
+            <span class="file-badge" style="background:rgba(6,182,212,0.15);color:#67e8f9;border:1px solid rgba(6,182,212,0.3)">DOCX</span>
+            <span class="file-badge" style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.3)">TXT</span>
+            <span class="file-badge" style="background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.3)">DOC</span>
+          </div>
+        </div>
+        <div id="dz-success" style="display:none">
+          <div style="width:64px;height:64px;border-radius:18px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;color:var(--green)">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="dz-title" id="dz-filename">document.pdf</div>
+          <div class="dz-sub" id="dz-filesize">—</div>
+          <div style="max-width:260px;margin:14px auto 0">
+            <div style="display:flex;justify-content:space-between;font-size:0.74rem;margin-bottom:4px">
+              <span style="color:var(--muted)">Extracted</span><span id="dz-pct" style="color:var(--green)">0%</span>
+            </div>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="dz-prog" style="width:0"></div></div>
+          </div>
+          <button onclick="resetFile()" style="margin-top:12px;font-size:0.76rem;background:none;border:1px solid var(--border2);color:var(--muted);padding:5px 14px;border-radius:6px;cursor:pointer">
+            <i class="fas fa-xmark mr-1"></i>Remove file
+          </button>
+        </div>
+      </div>
+
+      <!-- Text paste area -->
+      <div style="position:relative;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="flex:1;height:1px;background:var(--border2)"></div>
+          <span style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:var(--muted)">OR PASTE TEXT</span>
+          <div style="flex:1;height:1px;background:var(--border2)"></div>
+        </div>
+        <textarea id="text-input" class="custom-inp" rows="4" placeholder="Paste any text here — articles, notes, study material..."></textarea>
+      </div>
+
+      <!-- Options row -->
+      <div class="row g-3 mb-3">
+        <!-- Question types -->
+        <div class="col-12 col-md-4">
+          <div class="option-card h-100">
+            <h4><i class="fas fa-list-check" style="color:var(--primary)"></i>Question Types</h4>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" name="qtype" value="mcq" checked><span>Multiple Choice</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" name="qtype" value="shortAnswer" checked><span>Short Answer</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" name="qtype" value="trueFalse" checked><span>True / False</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" name="qtype" value="fillBlanks"><span>Fill in the Blank</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" name="qtype" value="matching"><span>Matching Pairs</span></label>
+          </div>
+        </div>
+        <!-- Config -->
+        <div class="col-12 col-md-4">
+          <div class="option-card h-100">
+            <h4><i class="fas fa-sliders" style="color:var(--cyan)"></i>Configuration</h4>
+            <div style="margin-bottom:14px">
+              <div style="font-size:0.8rem;font-weight:600;margin-bottom:7px;color:var(--muted)">DIFFICULTY</div>
+              <div style="display:flex;gap:6px">
+                <button class="diff-pill" data-d="easy">Easy</button>
+                <button class="diff-pill selected" data-d="medium">Medium</button>
+                <button class="diff-pill" data-d="hard">Hard</button>
+              </div>
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:0.8rem;font-weight:600;margin-bottom:7px;color:var(--muted)">QUESTIONS</div>
+              <div class="num-stepper">
+                <button onclick="adjustCount(-1)">−</button>
+                <span id="count-display">10</span>
+                <button onclick="adjustCount(1)">+</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.8rem;font-weight:600;margin-bottom:6px;color:var(--muted)">LANGUAGE</div>
+              <select id="lang-sel" class="custom-sel">
+                <option value="English">English</option>
+                <option value="Tamil">Tamil</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Arabic">Arabic</option>
+                <option value="Chinese">Chinese</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <!-- AI Features -->
+        <div class="col-12 col-md-4">
+          <div class="option-card h-100">
+            <h4><i class="fas fa-wand-magic-sparkles" style="color:var(--gold)"></i>AI Features</h4>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="feat-answers" checked><span>Include Answers</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="feat-explain" checked><span>Explanations</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="feat-hints"><span>Hints</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="feat-topics" checked><span>Topic Tags</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="feat-blooms"><span>Bloom's Taxonomy</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate button -->
+      <button class="btn-neon" id="gen-btn" disabled>
+        <i class="fas fa-wand-magic-sparkles"></i>
+        Generate Questions with Claude AI
+      </button>
+      <div style="text-align:center;margin-top:10px;font-size:0.74rem;color:var(--muted)">
+        <i class="fas fa-keyboard" style="margin-right:5px"></i>Shortcut: <kbd style="background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px">Ctrl+Enter</kbd>
+      </div>
+    </div>
+
+    <!-- ======================== SETTINGS TAB ======================== -->
+    <div class="tab-pane panel-body" id="pane-settings">
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <div class="option-card mb-4">
+            <h4><i class="fas fa-file-export" style="color:var(--primary)"></i>Export Settings</h4>
+            <div style="margin-bottom:12px">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">FORMAT</label>
+              <select id="export-fmt" class="custom-sel">
+                <option value="json">JSON</option>
+                <option value="markdown">Markdown</option>
+                <option value="txt">Plain Text</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">ANSWER VISIBILITY</label>
+              <select id="ans-vis" class="custom-sel">
+                <option value="show">Show Answers Inline</option>
+                <option value="hide">Hide Answers</option>
+                <option value="separate">Separate Answer Key</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">QUESTION DENSITY</label>
+              <input type="range" min="1" max="5" value="3" id="density" style="width:100%">
+              <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);margin-top:3px">
+                <span>Sparse</span><span>Dense</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="option-card">
+            <h4><i class="fas fa-palette" style="color:var(--rose)"></i>Appearance</h4>
+            <div style="margin-bottom:14px">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:8px">ACCENT COLOR</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="swatch active" style="background:#7c3aed" onclick="setAccent('#7c3aed','rgba(124,58,237,0.35)')"></button>
+                <button class="swatch" style="background:#06b6d4" onclick="setAccent('#06b6d4','rgba(6,182,212,0.35)')"></button>
+                <button class="swatch" style="background:#10b981" onclick="setAccent('#10b981','rgba(16,185,129,0.35)')"></button>
+                <button class="swatch" style="background:#f43f5e" onclick="setAccent('#f43f5e','rgba(244,63,94,0.35)')"></button>
+                <button class="swatch" style="background:#f59e0b" onclick="setAccent('#f59e0b','rgba(245,158,11,0.35)')"></button>
+                <button class="swatch" style="background:#8b5cf6" onclick="setAccent('#8b5cf6','rgba(139,92,246,0.35)')"></button>
+              </div>
+            </div>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="neural-toggle" checked><span>Neural Particle Background</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="cursor-toggle" checked><span>Cursor Glow Effect</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" id="anim-toggle" checked><span>Card Animations</span></label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="option-card mb-4">
+            <h4><i class="fas fa-brain" style="color:var(--cyan)"></i>AI Provider</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+              <div class="provider-pill active" data-prov="anthropic" id="prov-anthropic">
+                <span class="dot"></span><i class="fas fa-robot" style="font-size:0.85rem"></i>
+                <span>Anthropic Claude (Auto)</span>
+              </div>
+              <div class="provider-pill" data-prov="groq" id="prov-groq">
+                <span class="dot"></span><i class="fas fa-bolt" style="font-size:0.85rem"></i>
+                <span>Groq (Llama 3.1 — Free)</span>
+              </div>
+            </div>
+            <div id="groq-key-wrap">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">GROQ API KEY <span style="color:var(--green);font-size:0.7rem">(free at console.groq.com)</span></label>
+              <input type="password" id="groq-key" class="custom-inp" placeholder="gsk_...">
+            </div>
+          </div>
+
+          <div class="option-card">
+            <h4><i class="fas fa-layer-group" style="color:var(--gold)"></i>Bloom's Taxonomy</h4>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" checked><span><strong>Remember</strong> — Recall facts</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" checked><span><strong>Understand</strong> — Explain ideas</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box" checked><span><strong>Apply</strong> — Use in new contexts</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box"><span><strong>Analyze</strong> — Draw connections</span></label>
+            <label class="chk-wrap"><input type="checkbox" class="chk-box"><span><strong>Evaluate / Create</strong></span></label>
+            <div style="margin-top:14px">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">CUSTOM INSTRUCTIONS</label>
+              <textarea id="custom-instr" class="custom-inp" rows="3" placeholder="Additional instructions for the AI..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== QUIZ TAB ======================== -->
+    <div class="tab-pane panel-body" id="pane-quiz">
+      <div id="quiz-area">
+        <div style="text-align:center;padding:60px 20px">
+          <div style="width:80px;height:80px;border-radius:22px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem;color:var(--primary)">
+            <i class="fas fa-gamepad"></i>
+          </div>
+          <div style="font-family:var(--font-head);font-weight:700;font-size:1.1rem;margin-bottom:6px">Quiz Mode</div>
+          <div style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Generate questions first, then come back to test yourself interactively!</div>
+          <button class="btn-ghost" onclick="switchTab('upload')"><i class="fas fa-arrow-left"></i> Go to Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== ANALYTICS TAB ======================== -->
+    <div class="tab-pane panel-body" id="pane-analytics">
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <div class="chart-card">
+            <div class="chart-title"><i class="fas fa-chart-line" style="margin-right:6px;color:var(--primary)"></i>Questions Generated</div>
+            <canvas id="chart-line" height="200"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="chart-card">
+            <div class="chart-title"><i class="fas fa-chart-pie" style="margin-right:6px;color:var(--cyan)"></i>Type Distribution</div>
+            <canvas id="chart-dough" height="200"></canvas>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="chart-card">
+            <div class="chart-title"><i class="fas fa-clock-rotate-left" style="margin-right:6px;color:var(--gold)"></i>Recent Activity</div>
+            <div style="overflow-x:auto">
+              <table class="activity-table">
+                <thead>
+                  <tr><th>Time</th><th>Document</th><th>Questions</th><th>Duration</th><th>Status</th></tr>
+                </thead>
+                <tbody id="activity-log">
+                  <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">No activity yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end main-panel -->
+
+  <!-- ============================================================
+       RESULTS SECTION
+       ============================================================ -->
+  <div id="results-section" style="display:none">
+    <div class="glass p-4">
+      <div class="results-header">
+        <div>
+          <div class="results-title">Generated Questions <span id="res-count" style="font-size:0.9rem;opacity:0.7"></span></div>
+          <div id="res-meta" style="font-size:0.78rem;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-ghost sm" id="quiz-mode-btn"><i class="fas fa-gamepad"></i><span class="label"> Quiz</span></button>
+          <button class="btn-ghost sm" id="copy-btn"><i class="fas fa-copy"></i><span class="label"> Copy</span></button>
+          <button class="btn-ghost sm" id="dl-btn"><i class="fas fa-download"></i><span class="label"> Export</span></button>
+        </div>
+      </div>
+      <div id="questions-list"></div>
+    </div>
+  </div>
+
+</div><!-- end main container -->
+
+<!-- ============================================================
+     LOADING OVERLAY
+     ============================================================ -->
+<div id="loading-overlay" style="display:none">
+  <div class="loader-card">
+    <div class="orbital-ring"></div>
+    <div class="loader-title">Claude AI Working…</div>
+    <div id="loader-status">Initializing neural engine</div>
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:5px">
+        <span style="color:var(--muted)">Progress</span>
+        <span id="loader-pct" style="color:var(--primary);font-weight:700">0%</span>
+      </div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="loader-prog" style="width:0"></div></div>
+    </div>
+    <div class="fun-fact-box"><span id="fun-fact">💡 AI can analyze 10,000 words in seconds!</span></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     API SETUP MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="modal-api" style="display:none">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="modal-title"><i class="fas fa-key" style="margin-right:8px;color:var(--primary);font-size:0.9rem"></i>AI Setup</div>
+      <button class="nav-icon-btn" onclick="closeModal('modal-api')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:700;margin-bottom:5px;font-size:0.88rem"><i class="fas fa-check-circle" style="color:var(--green);margin-right:6px"></i>Anthropic Claude — Auto Ready</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Running inside Claude.ai? No key needed — AI works automatically with full Claude Sonnet 4 power!</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:700;margin-bottom:6px;font-size:0.88rem"><i class="fas fa-bolt" style="color:var(--gold);margin-right:6px"></i>Groq (Alternative — Ultra Fast)</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">Free at console.groq.com — Uses Llama 3.1 8B Instant (700 tokens/sec!)</div>
+      <input type="password" id="modal-groq-key" class="custom-inp" placeholder="gsk_your_groq_key_here">
+    </div>
+    <button class="btn-neon" onclick="saveKeys()" style="margin-top:4px"><i class="fas fa-save"></i>Save & Activate</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     HELP MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="modal-help" style="display:none">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="modal-title"><i class="fas fa-circle-question" style="margin-right:8px;color:var(--cyan);font-size:0.9rem"></i>Help & Docs</div>
+      <button class="nav-icon-btn" onclick="closeModal('modal-help')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px">
+        <div style="font-weight:700;margin-bottom:5px;font-size:0.85rem"><i class="fas fa-rocket" style="color:var(--primary);margin-right:6px"></i>Quick Start</div>
+        <div style="font-size:0.8rem;color:var(--muted)">1. Upload a PDF / DOCX / TXT file or paste text<br>2. Choose question types and difficulty<br>3. Click "Generate" and Claude AI does the rest!</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px">
+        <div style="font-weight:700;margin-bottom:5px;font-size:0.85rem"><i class="fas fa-list" style="color:var(--cyan);margin-right:6px"></i>Question Types</div>
+        <div style="font-size:0.8rem;color:var(--muted)"><strong>MCQ</strong> — 4 options, 1 correct<br><strong>Short Answer</strong> — Open-ended<br><strong>True/False</strong> — Binary statements<br><strong>Fill Blank</strong> — Missing keywords<br><strong>Matching</strong> — Term-definition pairs</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px">
+        <div style="font-weight:700;margin-bottom:5px;font-size:0.85rem"><i class="fas fa-keyboard" style="color:var(--gold);margin-right:6px"></i>Keyboard Shortcuts</div>
+        <div style="font-size:0.8rem;color:var(--muted)"><kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 7px">Ctrl+Enter</kbd> Generate &nbsp;
+        <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 7px">Ctrl+K</kbd> API Setup &nbsp;
+        <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 7px">Esc</kbd> Close modal</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+
+    /* =============================================
+   STATE
+   ============================================= */
+const S = {
+  fileText: '', file: null,
+  questions: [],
+  difficulty: 'medium',
+  count: 10,
+  provider: 'groq',
+  groqKey: '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',
+  theme: 'dark',
+  stats: { docs:0, qs:0, totalTime:0, sessions:0 },
+  activity: [],
+  chartsReady: false,
+  particlesOn: true,
+  animOn: true,
+};
+
+// Load persisted state
+try {
+  const saved = JSON.parse(localStorage.getItem('qg_v2') || '{}');
+  if (saved.theme) S.theme = saved.theme;
+  if (saved.stats) S.stats = { ...S.stats, ...saved.stats };
+  // Always use hardcoded key — don't override from localStorage
+  if (saved.activity) S.activity = saved.activity.slice(0,20);
+} catch(e){}
+
+function persist() {
+  try { localStorage.setItem('qg_v2', JSON.stringify({ theme:S.theme, stats:S.stats, groqKey:S.groqKey, provider:S.provider, activity:S.activity.slice(0,20) })); } catch(e){}
+}
+
+/* =============================================
+   THEME
+   ============================================= */
+function applyTheme(t) {
+  S.theme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  const icon = document.querySelector('#themeBtn i');
+  icon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  persist();
+}
+applyTheme(S.theme);
+
+document.getElementById('themeBtn').addEventListener('click', () => applyTheme(S.theme === 'dark' ? 'light' : 'dark'));
+
+/* =============================================
+   TABS
+   ============================================= */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  if (name === 'analytics') initCharts();
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+/* =============================================
+   DIFFICULTY PILLS
+   ============================================= */
+document.querySelectorAll('.diff-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.diff-pill').forEach(x => x.classList.remove('selected'));
+    p.classList.add('selected');
+    S.difficulty = p.dataset.d;
+  });
+});
+
+/* =============================================
+   QUESTION COUNT
+   ============================================= */
+function adjustCount(d) {
+  S.count = Math.max(1, Math.min(50, S.count + d));
+  document.getElementById('count-display').textContent = S.count;
+}
+
+/* =============================================
+   FILE UPLOAD
+   ============================================= */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-active'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-active'); if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); });
+dropZone.addEventListener('click', e => { if (!e.target.closest('button')) fileInput.click(); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
+
+document.getElementById('text-input').addEventListener('input', e => {
+  if (e.target.value.trim().length > 30) enableGen(); else if (!S.file) disableGen();
+});
+
+function enableGen()  { document.getElementById('gen-btn').disabled = false; }
+function disableGen() { document.getElementById('gen-btn').disabled = true; }
+
+async function processFile(file) {
+  const ok = ['application/pdf','application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document','text/plain'];
+  if (!ok.includes(file.type) && !/\.(pdf|doc|docx|txt)$/i.test(file.name)) {
+    toast('Unsupported file type. Use PDF, DOCX, DOC, or TXT.', 'error'); return;
+  }
+  S.file = file;
+  document.getElementById('dz-default').style.display = 'none';
+  document.getElementById('dz-success').style.display = 'block';
+  document.getElementById('dz-filename').textContent = file.name;
+  document.getElementById('dz-filesize').textContent = `${(file.size/1024).toFixed(1)} KB`;
+
+  let prog = 0;
+  const bar = document.getElementById('dz-prog'), pct = document.getElementById('dz-pct');
+  const iv = setInterval(() => {
+    prog = Math.min(prog + 4, 90); bar.style.width = prog + '%'; pct.textContent = prog + '%';
+  }, 80);
+
+  try {
+    S.fileText = await extractText(file);
+    clearInterval(iv); bar.style.width = '100%'; pct.textContent = '100%';
+    enableGen();
+    toast(`✅ File ready! ${S.fileText.length.toLocaleString()} chars extracted.`, 'success');
+  } catch(e) {
+    clearInterval(iv); toast('Error reading file: ' + e.message, 'error');
+  }
+}
+
+function resetFile() {
+  S.file = null; S.fileText = '';
+  document.getElementById('dz-default').style.display = 'block';
+  document.getElementById('dz-success').style.display = 'none';
+  fileInput.value = '';
+  if (!document.getElementById('text-input').value.trim()) disableGen();
+}
+
+async function extractText(file) {
+  if (/text\/plain|\.txt$/i.test(file.type || file.name)) return await file.text();
+
+  if (/pdf/i.test(file.type || file.name)) {
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let i = 1; i <= Math.min(pdf.numPages, 40); i++) {
+      const pg = await pdf.getPage(i);
+      const ct = await pg.getTextContent();
+      text += ct.items.map(x => x.str).join(' ') + '\n';
+    }
+    return text;
+  }
+
+  if (/docx|wordprocessingml/i.test(file.type || file.name)) {
+    if (typeof mammoth === 'undefined') throw new Error('Mammoth not loaded');
+    const buf = await file.arrayBuffer();
+    const r = await mammoth.extractRawText({ arrayBuffer: buf });
+    return r.value;
+  }
+
+  return await file.text();
+}
+
+/* =============================================
+   AI GENERATION
+   ============================================= */
+const FACTS = [
+  '💡 Claude AI reads and understands full documents in milliseconds',
+  '🧠 Bloom\'s Taxonomy identifies 6 cognitive learning levels',
+  '🎯 Active recall boosts exam scores by up to 50%',
+  '⚡ Spaced repetition improves retention by over 200%',
+  '📖 Well-crafted MCQs reduce guessing by 35%',
+  '🔬 Question stems should be complete sentences for clarity',
+  '🌟 Claude Sonnet 4 has a 200,000 token context window',
+  '🤖 LLMs process your text with attention mechanisms',
+];
+let factIdx = 0;
+
+async function generate() {
+  const textPaste = document.getElementById('text-input').value.trim();
+  const src = S.fileText || textPaste;
+  if (!src || src.length < 30) { toast('Upload a file or paste text first!', 'warning'); return; }
+
+  const types = [...document.querySelectorAll('[name="qtype"]:checked')].map(c => c.value);
+  if (!types.length) { toast('Select at least one question type', 'warning'); return; }
+
+  const overlay = document.getElementById('loading-overlay');
+  overlay.style.display = 'flex';
+  const t0 = Date.now();
+
+  const stages = [
+    [10,'📖 Reading document content…'],
+    [25,'🔍 Identifying key concepts…'],
+    [42,'🧠 Analyzing semantic structure…'],
+    [60,'✍️ Drafting questions with Groq AI…'],
+    [78,'🎯 Calibrating difficulty levels…'],
+    [90,'✨ Quality checking output…'],
+  ];
+
+  const factIv = setInterval(() => {
+    document.getElementById('fun-fact').textContent = FACTS[factIdx++ % FACTS.length];
+  }, 2200);
+
+  for (const [p, msg] of stages) {
+    document.getElementById('loader-status').textContent = msg;
+    document.getElementById('loader-prog').style.width = p + '%';
+    document.getElementById('loader-pct').textContent = p + '%';
+    await sleep(350);
+  }
+
+  try {
+    const qs = await callAI(src, types);
+    S.questions = qs;
+
+    document.getElementById('loader-prog').style.width = '100%';
+    document.getElementById('loader-pct').textContent = '100%';
+    document.getElementById('loader-status').textContent = '🎉 Complete!';
+    await sleep(400);
+
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    S.stats.docs++;
+    S.stats.qs += qs.length;
+    S.stats.totalTime += parseFloat(elapsed);
+    S.stats.sessions++;
+    S.activity.unshift({ doc: S.file?.name || 'Pasted Text', count: qs.length, time: elapsed + 's', ts: 'Just now' });
+    persist(); updateStatsUI();
+
+    renderResults(qs);
+    prepareQuiz(qs);
+    toast(`🎉 ${qs.length} questions generated in ${elapsed}s!`, 'success');
+
+  } catch(err) {
+    console.error(err);
+    toast('AI error: ' + err.message + '. Using smart fallback…', 'warning');
+    const fb = smartFallback(src, types);
+    S.questions = fb;
+    renderResults(fb);
+    prepareQuiz(fb);
+  } finally {
+    clearInterval(factIv);
+    overlay.style.display = 'none';
+  }
+}
+
+document.getElementById('gen-btn').addEventListener('click', generate);
+
+/* =============================================
+   AI API CALL — GROQ PRIMARY, CLAUDE FALLBACK
+   ============================================= */
+async function callAI(text, types) {
+  const truncated = text.substring(0, 5000);
+  const lang = document.getElementById('lang-sel').value;
+  const custom = document.getElementById('custom-instr')?.value || '';
+  const inclAnswers = document.getElementById('feat-answers').checked;
+  const inclExplain = document.getElementById('feat-explain').checked;
+  const inclHints   = document.getElementById('feat-hints').checked;
+  const typeMap = { mcq:'MCQ', shortAnswer:'Short Answer', trueFalse:'True/False', fillBlanks:'Fill in the Blank', matching:'Matching' };
+  const typeStr = types.map(t => typeMap[t]||t).join(', ');
+
+  const system = `You are an expert educational question generator. Respond ONLY with a valid JSON array. No markdown, no explanation. Generate exactly ${S.count} high-quality ${S.difficulty} difficulty questions in ${lang} from provided text.
+
+Question JSON schemas:
+MCQ:          {"type":"mcq","question":"...","options":["A. option","B. option","C. option","D. option"],"correct":0,"explanation":"...","hint":"...","topic":"...","difficulty":"${S.difficulty}"}
+True/False:   {"type":"trueFalse","question":"...","correct":true,"explanation":"...","topic":"...","difficulty":"${S.difficulty}"}
+Short Answer: {"type":"shortAnswer","question":"...","answer":"...","explanation":"...","topic":"...","difficulty":"${S.difficulty}"}
+Fill Blank:   {"type":"fillBlanks","question":"The ___ is ...","answer":"...","hint":"...","topic":"...","difficulty":"${S.difficulty}"}
+Matching:     {"type":"matching","question":"Match terms","pairs":[{"term":"...","definition":"..."}],"topic":"...","difficulty":"${S.difficulty}"}
+
+Rules:
+- Base ALL questions strictly on the provided text
+- Mix types: ${typeStr}
+- Language: ${lang}
+- Difficulty: ${S.difficulty}
+- correct field in MCQ is the 0-based index of the correct option
+${!inclAnswers ? '- Omit explanation field' : ''}
+${!inclHints   ? '- Omit hint field' : ''}
+${custom ? '- Extra: ' + custom : ''}`;
+
+  const user = `Generate ${S.count} questions (types: ${typeStr}) from:\n\n${truncated}\n\nReturn ONLY the JSON array.`;
+
+  // Always try Groq first with hardcoded key
+  if (S.groqKey) {
+    try {
+      return await callGroq(system, user);
+    } catch(groqErr) {
+      console.warn('Groq failed, falling back to Claude:', groqErr.message);
+      // Fall through to Claude
+    }
+  }
+  return callClaude(system, user);
+}
+
+/* =============================================
+   GROQ API CALL (PRIMARY — llama-3.3-70b-versatile)
+   ============================================= */
+async function callGroq(system, user) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + S.groqKey
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user',   content: user   }
+      ],
+      max_tokens: 4096,
+      temperature: 0.7,
+      response_format: { type: 'json_object' }
+    })
+  });
+
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Groq HTTP ${res.status}`);
+  }
+
+  const d = await res.json();
+  const raw = d.choices?.[0]?.message?.content || '[]';
+
+  // response_format:json_object sometimes returns {"questions":[...]}
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch(e) {
+    throw new Error('Groq JSON parse failed');
+  }
+
+  if (Array.isArray(parsed)) return parsed;
+  // unwrap common wrapper keys
+  const wrapped = parsed.questions || parsed.data || parsed.items || parsed.result;
+  if (Array.isArray(wrapped)) return wrapped;
+
+  // last resort — try extracting an array substring
+  return parseJSON(raw);
+}
+
+/* =============================================
+   ANTHROPIC API CALL (FALLBACK)
+   ============================================= */
+async function callClaude(system, user) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system,
+      messages: [{ role: 'user', content: user }]
+    })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Claude HTTP ${res.status}`);
+  }
+  const d = await res.json();
+  return parseJSON(d.content[0]?.text || '[]');
+}
+
+function parseJSON(raw) {
+  let s = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+  const a = s.indexOf('['), b = s.lastIndexOf(']');
+  if (a !== -1 && b !== -1) s = s.slice(a, b+1);
+  try {
+    const p = JSON.parse(s);
+    if (Array.isArray(p) && p.length > 0) return p;
+    throw new Error('Empty array');
+  } catch(e) {
+    throw new Error('Could not parse AI JSON response');
+  }
+}
+
+/* =============================================
+   SMART JS FALLBACK
+   ============================================= */
+function smartFallback(text, types) {
+  const sents = (text.match(/[^.!?\n]{30,}[.!?]/g) || []).slice(0, 50);
+  const words = [...new Set(text.split(/\s+/).filter(w => w.length > 5 && /^[A-Za-z]/.test(w)))].slice(0, 40);
+  const qs = [];
+  const n = Math.min(S.count, 12);
+
+  for (let i = 0; i < n; i++) {
+    const tp = types[i % types.length];
+    const sent = sents[i % Math.max(1, sents.length)] || 'the key concept discussed';
+    const kw = words[i % Math.max(1, words.length)] || 'concept';
+    const kw2 = words[(i+1) % Math.max(1, words.length)] || 'element';
+    const kw3 = words[(i+2) % Math.max(1, words.length)] || 'factor';
+
+    if (tp === 'mcq') qs.push({ type:'mcq', question:`According to the text, what best describes "${kw}"?`, options:[`A. It is the primary ${kw2} described`, `B. It relates to ${kw3} and broader concepts`, `C. It is independent of other factors`, `D. It contradicts the main argument`], correct:0, explanation:`The text supports option A based on the context around "${kw}".`, topic:kw, difficulty:S.difficulty });
+    else if (tp === 'trueFalse') qs.push({ type:'trueFalse', question:`The concept of "${kw}" is a central theme in the provided text.`, correct: i%2===0, explanation:`This is ${i%2===0?'supported by':'not fully supported in'} the text.`, topic:kw, difficulty:S.difficulty });
+    else if (tp === 'shortAnswer') qs.push({ type:'shortAnswer', question:`Explain the significance of "${kw}" as described in the text.`, answer:`Based on the text, ${kw} refers to an important concept. A complete answer should address the context, relevance, and implications discussed.`, topic:kw, difficulty:S.difficulty });
+    else if (tp === 'fillBlanks') qs.push({ type:'fillBlanks', question:sent.replace(kw,'___'), answer:kw, hint:`Starts with "${kw[0].toUpperCase()}"`, topic:kw, difficulty:S.difficulty });
+    else if (tp === 'matching') qs.push({ type:'matching', question:'Match each term with its correct description', pairs:[{term:kw,definition:sents[i%sents.length]?.substring(0,60)+'...'||'Key concept in the text'},{term:kw2,definition:sents[(i+1)%sents.length]?.substring(0,60)+'...'||'Related element discussed'},{term:kw3,definition:sents[(i+2)%sents.length]?.substring(0,60)+'...'||'Supporting factor mentioned'}], topic:'Terminology', difficulty:S.difficulty });
+  }
+  return qs;
+}
+
+/* =============================================
+   RENDER RESULTS
+   ============================================= */
+const BADGE = { mcq:'badge-mcq', trueFalse:'badge-tf', shortAnswer:'badge-sa', fillBlanks:'badge-fib', matching:'badge-matching' };
+const BLABEL = { mcq:'MCQ', trueFalse:'T/F', shortAnswer:'Short', fillBlanks:'Fill', matching:'Match' };
+const QCOLOR = { mcq:'linear-gradient(180deg,var(--primary),#4f46e5)', trueFalse:'linear-gradient(180deg,var(--rose),#e11d48)', shortAnswer:'linear-gradient(180deg,var(--cyan),#0891b2)', fillBlanks:'linear-gradient(180deg,var(--green),#059669)', matching:'linear-gradient(180deg,var(--gold),#d97706)' };
+
+function renderResults(qs) {
+  const list = document.getElementById('questions-list');
+  document.getElementById('res-count').textContent = `(${qs.length})`;
+  const lang = document.getElementById('lang-sel').value;
+  document.getElementById('res-meta').textContent = `${S.difficulty} difficulty · ${lang} · ${qs.length} questions`;
+
+  list.innerHTML = qs.map((q,i) => buildCard(q,i)).join('');
+
+  const section = document.getElementById('results-section');
+  section.style.display = 'block';
+  section.scrollIntoView({ behavior:'smooth', block:'start' });
+
+  if (S.animOn) {
+    setTimeout(() => {
+      document.querySelectorAll('.q-card').forEach((c,i) => {
+        setTimeout(() => c.classList.add('show'), i * 70);
+      });
+    }, 50);
+  } else {
+    document.querySelectorAll('.q-card').forEach(c => c.classList.add('show'));
+  }
+}
+
+function buildCard(q, i) {
+  const badge = BADGE[q.type] || 'badge-mcq';
+  const lbl   = BLABEL[q.type] || q.type;
+  const grad  = QCOLOR[q.type] || QCOLOR.mcq;
+  const diff  = q.difficulty || S.difficulty;
+  let body = '';
+
+  if (q.type === 'mcq') {
+    body = `<div style="display:flex;flex-direction:column;gap:0;margin-top:10px">
+      ${(q.options||[]).map((opt,oi) => `
+        <button class="opt-btn" onclick="pickOpt(this,${i},${oi})">
+          <span class="opt-letter">${String.fromCharCode(65+oi)}</span>
+          <span>${opt.replace(/^[A-D]\.\s*/,'')}</span>
+        </button>`).join('')}
+    </div>
+    <div class="reveal-box" id="rev-${i}">
+      <strong style="color:var(--green)">✅ Correct: Option ${q.correct !== undefined ? String.fromCharCode(65+q.correct) : '?'}</strong>
+      ${q.explanation ? `<br><br><strong>💡 Explanation:</strong> ${q.explanation}` : ''}
+      ${q.hint ? `<br><em style="color:var(--muted)">🔑 Hint: ${q.hint}</em>` : ''}
+    </div>
+    <button class="reveal-btn" onclick="toggleReveal(${i})"><i class="fas fa-eye" style="margin-right:5px"></i>Show Answer</button>`;
+  } else if (q.type === 'trueFalse') {
+    body = `<div style="display:flex;gap:10px;margin-top:10px">
+      <button class="opt-btn" style="flex:1" onclick="pickTF(this,${i},true)"><i class="fas fa-check" style="color:var(--green);margin-right:6px"></i>True</button>
+      <button class="opt-btn" style="flex:1" onclick="pickTF(this,${i},false)"><i class="fas fa-xmark" style="color:var(--rose);margin-right:6px"></i>False</button>
+    </div>
+    <div class="reveal-box" id="rev-${i}">
+      <strong style="color:var(--green)">✅ Answer: ${q.correct ? 'True' : 'False'}</strong>
+      ${q.explanation ? `<br><br>${q.explanation}` : ''}
+    </div>
+    <button class="reveal-btn" onclick="toggleReveal(${i})"><i class="fas fa-eye" style="margin-right:5px"></i>Show Answer</button>`;
+  } else if (q.type === 'shortAnswer') {
+    body = `<div style="margin-top:10px">
+      <textarea rows="3" class="custom-inp" placeholder="Write your answer here…" style="resize:vertical"></textarea>
+      <div class="reveal-box" id="rev-${i}" style="margin-top:8px">
+        <strong>📝 Sample Answer:</strong><br>${q.answer || '—'}
+        ${q.explanation ? `<br><br><em>${q.explanation}</em>` : ''}
+      </div>
+      <button class="reveal-btn" onclick="toggleReveal(${i})"><i class="fas fa-eye" style="margin-right:5px"></i>Show Sample Answer</button>
+    </div>`;
+  } else if (q.type === 'fillBlanks') {
+    const disp = (q.question||'').replace('___','<input class="blank-input" type="text" placeholder="___">');
+    body = `<div style="margin-top:10px">
+      <p style="font-size:0.9rem;line-height:1.7">${disp}</p>
+      ${q.hint ? `<p style="font-size:0.78rem;color:var(--muted);margin-top:6px"><i class="fas fa-lightbulb" style="color:var(--gold);margin-right:5px"></i>Hint: ${q.hint}</p>` : ''}
+      <div class="reveal-box" id="rev-${i}" style="margin-top:8px"><strong style="color:var(--green)">✅ Answer: ${q.answer||'—'}</strong></div>
+      <button class="reveal-btn" onclick="toggleReveal(${i})"><i class="fas fa-eye" style="margin-right:5px"></i>Show Answer</button>
+    </div>`;
+  } else if (q.type === 'matching') {
+    const pairs = q.pairs || [];
+    body = `<div class="match-grid" style="margin-top:10px">
+      <div><div style="font-size:0.7rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px">TERMS</div>
+        ${pairs.map((p,pi) => `<div class="match-term">${pi+1}. ${p.term}</div>`).join('')}
+      </div>
+      <div><div style="font-size:0.7rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px">DEFINITIONS</div>
+        ${pairs.map((p,pi) => `<div class="match-def">${String.fromCharCode(65+pi)}. ${p.definition}</div>`).join('')}
+      </div>
+    </div>
+    <div class="reveal-box" id="rev-${i}" style="margin-top:8px"><strong style="color:var(--green)">✅ Matches:</strong> ${pairs.map((_,pi) => `${pi+1}→${String.fromCharCode(65+pi)}`).join(' · ')}</div>
+    <button class="reveal-btn" onclick="toggleReveal(${i})"><i class="fas fa-eye" style="margin-right:5px"></i>Show Answers</button>`;
+  }
+
+  return `<div class="q-card" style="--qtype-color:${grad}" id="qc-${i}">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="q-num">${i+1}</div>
+      <span class="type-badge ${badge}">${lbl}</span>
+      <span class="diff-chip ${diff}">${diff}</span>
+      ${q.topic ? `<span style="font-size:0.68rem;font-weight:600;color:var(--muted);padding:2px 8px;background:var(--surface2);border-radius:20px">${q.topic}</span>` : ''}
+    </div>
+    <p class="q-text">${q.question}</p>
+    ${body}
+  </div>`;
+}
+
+function toggleReveal(i) {
+  const box = document.getElementById('rev-' + i);
+  if (!box) return;
+  const shown = box.classList.toggle('show');
+  const btn = box.nextElementSibling;
+  if (btn) btn.innerHTML = shown
+    ? '<i class="fas fa-eye-slash" style="margin-right:5px"></i>Hide Answer'
+    : '<i class="fas fa-eye" style="margin-right:5px"></i>Show Answer';
+}
+
+function pickOpt(el, qi, oi) {
+  const card = document.getElementById('qc-' + qi);
+  if (!card) return;
+  const correct = S.questions[qi]?.correct;
+  card.querySelectorAll('.opt-btn').forEach((b, bi) => {
+    b.classList.toggle('correct', bi === correct);
+    b.classList.toggle('wrong', bi === oi && bi !== correct);
+    b.disabled = true;
+  });
+  if (!document.getElementById('rev-'+qi)?.classList.contains('show')) toggleReveal(qi);
+}
+
+function pickTF(el, qi, val) {
+  const correct = S.questions[qi]?.correct;
+  const card = document.getElementById('qc-' + qi);
+  if (!card) return;
+  card.querySelectorAll('.opt-btn').forEach(b => {
+    const bval = b.textContent.trim().startsWith('True') ? true : false;
+    b.classList.toggle('correct', bval === correct);
+    b.classList.toggle('wrong', bval === val && bval !== correct);
+    b.disabled = true;
+  });
+  if (!document.getElementById('rev-'+qi)?.classList.contains('show')) toggleReveal(qi);
+}
+
+/* =============================================
+   COPY & DOWNLOAD
+   ============================================= */
+document.getElementById('copy-btn')?.addEventListener('click', () => {
+  const txt = S.questions.map((q,i) => {
+    let o = `Q${i+1}. [${q.type}] ${q.question}\n`;
+    if (q.options) o += q.options.map((x,xi) => `  ${String.fromCharCode(65+xi)}) ${x}`).join('\n') + '\n';
+    const ans = q.correct !== undefined ? (q.type==='mcq' ? String.fromCharCode(65+q.correct) : q.correct) : (q.answer||'');
+    if (ans !== '') o += `Answer: ${ans}\n`;
+    return o;
+  }).join('\n' + '─'.repeat(40) + '\n\n');
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Copied to clipboard!', 'success'));
+});
+
+document.getElementById('dl-btn')?.addEventListener('click', () => {
+  const fmt = document.getElementById('export-fmt')?.value || 'json';
+  let content, mime, ext;
+
+  if (fmt === 'json') {
+    content = JSON.stringify(S.questions, null, 2); mime = 'application/json'; ext = 'json';
+  } else if (fmt === 'markdown') {
+    content = S.questions.map((q,i) => {
+      let md = `## Q${i+1} · ${q.type} · ${q.difficulty||S.difficulty}\n\n**${q.question}**\n\n`;
+      if (q.options) md += q.options.map((x,xi) => `- ${String.fromCharCode(65+xi)}) ${x}`).join('\n') + '\n\n';
+      if (q.correct !== undefined) md += `> **Answer:** ${q.type==='mcq' ? String.fromCharCode(65+q.correct) : q.correct}\n\n`;
+      if (q.answer) md += `> **Answer:** ${q.answer}\n\n`;
+      if (q.explanation) md += `> **Explanation:** ${q.explanation}\n\n`;
+      return md;
+    }).join('---\n\n'); mime = 'text/markdown'; ext = 'md';
+  } else if (fmt === 'csv') {
+    const rows = [['#','Type','Question','Answer','Difficulty','Topic']];
+    S.questions.forEach((q,i) => {
+      const ans = q.correct !== undefined ? (q.type==='mcq' ? String.fromCharCode(65+q.correct) : q.correct) : (q.answer||'');
+      rows.push([i+1, q.type, `"${q.question.replace(/"/g,'""')}"`, `"${String(ans).replace(/"/g,'""')}"`, q.difficulty||S.difficulty, q.topic||'']);
+    });
+    content = rows.map(r => r.join(',')).join('\n'); mime = 'text/csv'; ext = 'csv';
+  } else {
+    content = S.questions.map((q,i) => {
+      let t = `Q${i+1}. ${q.question}\n`;
+      if (q.options) t += q.options.map((x,xi) => `  ${String.fromCharCode(65+xi)}) ${x}`).join('\n') + '\n';
+      const ans = q.correct !== undefined ? (q.type==='mcq' ? String.fromCharCode(65+q.correct) : q.correct) : (q.answer||'');
+      if (ans !== '') t += `Answer: ${ans}\n`;
+      return t;
+    }).join('\n' + '─'.repeat(40) + '\n\n'); mime = 'text/plain'; ext = 'txt';
+  }
+
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href:url, download:`QuestionGenius_${Date.now()}.${ext}` });
+  a.click(); URL.revokeObjectURL(url);
+  toast('⬇️ Export ready!', 'success');
+});
+
+document.getElementById('quiz-mode-btn')?.addEventListener('click', () => { switchTab('quiz'); window.scrollTo({ top:0, behavior:'smooth' }); });
+
+/* =============================================
+   QUIZ MODE
+   ============================================= */
+let QZ = { idx:0, score:0, total:0, answers:{} };
+
+function prepareQuiz(qs) {
+  QZ = { idx:0, score:0, total:qs.length, answers:{} };
+  const area = document.getElementById('quiz-area');
+  area.innerHTML = `<div style="text-align:center;padding:48px 20px">
+    <div style="width:100px;height:100px;border-radius:24px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2.5rem;color:var(--primary)"><i class="fas fa-gamepad"></i></div>
+    <div style="font-family:var(--font-head);font-weight:800;font-size:1.4rem;margin-bottom:6px">Ready to Test?</div>
+    <div style="color:var(--muted);margin-bottom:24px">${qs.length} questions · ${S.difficulty} difficulty · Let's go!</div>
+    <button class="btn-neon" style="max-width:220px" onclick="startQuiz()"><i class="fas fa-play"></i>Start Quiz</button>
+  </div>`;
+}
+
+function startQuiz() {
+  QZ.idx = 0; QZ.score = 0; QZ.answers = {};
+  renderQuizQ();
+}
+
+function renderQuizQ() {
+  const q = S.questions[QZ.idx];
+  if (!q) { showQuizEnd(); return; }
+  const pct = Math.round((QZ.idx / QZ.total) * 100);
+  const area = document.getElementById('quiz-area');
+
+  let opts = '';
+  if (q.type === 'mcq') {
+    opts = (q.options||[]).map((o,oi) => `
+      <button class="opt-btn" onclick="quizAns(${oi})">
+        <span class="opt-letter">${String.fromCharCode(65+oi)}</span>
+        <span>${o.replace(/^[A-D]\.\s*/,'')}</span>
+      </button>`).join('');
+  } else if (q.type === 'trueFalse') {
+    opts = `<button class="opt-btn" onclick="quizAns(true)" style="margin-right:10px;flex:1"><i class="fas fa-check" style="color:var(--green);margin-right:6px"></i>True</button>
+            <button class="opt-btn" onclick="quizAns(false)" style="flex:1"><i class="fas fa-xmark" style="color:var(--rose);margin-right:6px"></i>False</button>`;
+    opts = `<div style="display:flex;gap:10px">${opts}</div>`;
+  } else {
+    opts = `<textarea id="qz-txt" rows="4" class="custom-inp" placeholder="Type your answer…" style="resize:vertical"></textarea>
+            <button class="btn-neon" style="margin-top:10px" onclick="quizTextAns()"><i class="fas fa-paper-plane"></i>Submit</button>`;
+  }
+
+  area.innerHTML = `
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span class="quiz-prog-label">QUESTION ${QZ.idx+1} OF ${QZ.total}</span>
+        <span class="quiz-prog-label">SCORE: ${QZ.score}</span>
+      </div>
+      <div class="prog-bar-wrap" style="margin-bottom:20px"><div class="prog-bar" style="width:${pct}%"></div></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+        <span class="type-badge ${BADGE[q.type]||'badge-mcq'}" style="margin-bottom:10px;display:inline-block">${BLABEL[q.type]||q.type}</span>
+        <p style="font-weight:600;font-size:0.95rem;line-height:1.6;margin:0">${q.question}</p>
+      </div>
+      <div id="qz-opts">${opts}</div>
+    </div>`;
+}
+
+function quizAns(ans) {
+  const q = S.questions[QZ.idx];
+  const correct = q.correct;
+  const isRight = ans === correct;
+  if (isRight) QZ.score++;
+  QZ.answers[QZ.idx] = { ans, isRight };
+
+  const opts = document.querySelectorAll('#qz-opts .opt-btn');
+  opts.forEach((b, bi) => {
+    b.disabled = true;
+    if (q.type === 'mcq') {
+      if (bi === correct) b.classList.add('correct');
+      if (bi === ans && !isRight) b.classList.add('wrong');
+    } else {
+      const bval = b.textContent.trim().startsWith('Tr');
+      if (bval === correct) b.classList.add('correct');
+      if (bval === ans && !isRight) b.classList.add('wrong');
+    }
+  });
+
+  const fb = document.createElement('div');
+  fb.style.cssText = 'margin-top:16px;padding:14px;border-radius:10px;font-size:0.84rem;line-height:1.5;animation:toastIn 0.3s ease';
+  fb.style.background = isRight ? 'rgba(52,211,153,0.1)' : 'rgba(251,113,133,0.1)';
+  fb.style.border = `1px solid ${isRight ? 'rgba(52,211,153,0.3)' : 'rgba(251,113,133,0.3)'}`;
+  fb.innerHTML = `<strong>${isRight ? '✅ Correct!' : '❌ Incorrect'}</strong>${q.explanation ? `<br><span style="color:var(--muted)">${q.explanation}</span>` : ''}<br><br>
+    <button class="btn-neon" style="max-width:200px;margin-top:6px;padding:10px" onclick="nextQZ()">
+      ${QZ.idx + 1 < QZ.total ? 'Next →' : 'See Results'}
+    </button>`;
+  document.getElementById('qz-opts').appendChild(fb);
+}
+
+function quizTextAns() {
+  const val = document.getElementById('qz-txt')?.value?.trim();
+  if (!val) return;
+  QZ.score += 0.5;
+  QZ.answers[QZ.idx] = { ans: val, isRight: 'partial' };
+  nextQZ();
+}
+
+function nextQZ() { QZ.idx++; if (QZ.idx >= QZ.total) showQuizEnd(); else renderQuizQ(); }
+
+function showQuizEnd() {
+  const pct = Math.round((QZ.score / QZ.total) * 100);
+  const grade = pct>=90?'A+':pct>=80?'A':pct>=70?'B':pct>=60?'C':'D';
+  const msg = pct>=85?'🌟 Outstanding!':pct>=70?'👍 Great work!':pct>=50?'📚 Keep studying!':'💪 More practice needed!';
+  const r = 54, c = 2*Math.PI*r, off = c - (pct/100)*c;
+
+  document.getElementById('quiz-area').innerHTML = `
+    <div style="text-align:center;padding:40px 20px">
+      <div class="score-ring">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="url(#sg)" stroke-width="10"
+            stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+          <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="var(--primary)"/>
+            <stop offset="100%" stop-color="var(--cyan)"/>
+          </linearGradient></defs>
+        </svg>
+        <div class="score-txt">
+          <div class="score-pct">${pct}%</div>
+          <div style="font-size:0.7rem;color:var(--muted);font-weight:600">${grade}</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-head);font-weight:800;font-size:1.6rem;margin-bottom:4px">${msg}</div>
+      <div style="color:var(--muted);margin-bottom:24px">${QZ.score}/${QZ.total} correct</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-neon" style="max-width:160px" onclick="startQuiz()"><i class="fas fa-redo"></i>Retry</button>
+        <button class="btn-ghost" onclick="switchTab('upload')"><i class="fas fa-plus"></i>New Questions</button>
+      </div>
+    </div>`;
+}
+
+/* =============================================
+   STATS UI
+   ============================================= */
+function updateStatsUI() {
+  document.getElementById('stat-docs').textContent = S.stats.docs;
+  document.getElementById('stat-qs').textContent = S.stats.qs;
+  const avg = S.stats.sessions > 0 ? (S.stats.totalTime / S.stats.sessions).toFixed(1) : 0;
+  document.getElementById('stat-time').textContent = avg + 's';
+  document.getElementById('stat-model').textContent = 'Groq · Llama 3.3';
+}
+updateStatsUI();
+
+/* =============================================
+   CHARTS
+   ============================================= */
+let lineChart, doughChart;
+
+function initCharts() {
+  if (S.chartsReady) return;
+  S.chartsReady = true;
+  const dark = S.theme === 'dark';
+  const grid = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick = dark ? '#64748b' : '#9ca3af';
+
+  const ctx1 = document.getElementById('chart-line')?.getContext('2d');
+  if (ctx1) {
+    lineChart = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{
+          label: 'Questions Generated',
+          data: S.stats.sessions>0 ? [0,0,0,0,0,0,S.stats.qs] : [8,22,15,31,18,27,12],
+          borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)',
+          tension: 0.45, fill: true, pointBackgroundColor: '#7c3aed', pointRadius: 5
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        plugins: { legend: { labels: { color: tick } } },
+        scales: {
+          x: { ticks:{color:tick}, grid:{color:grid}, border:{color:grid} },
+          y: { ticks:{color:tick}, grid:{color:grid}, border:{color:grid} }
+        }
+      }
+    });
+  }
+
+  const ctx2 = document.getElementById('chart-dough')?.getContext('2d');
+  if (ctx2) {
+    const typeCounts = S.questions.reduce((a,q) => { a[q.type]=(a[q.type]||0)+1; return a; }, {});
+    const hasData = Object.keys(typeCounts).length > 0;
+    doughChart = new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: hasData ? Object.keys(typeCounts).map(t=>BLABEL[t]||t) : ['MCQ','Short','T/F','Fill','Match'],
+        datasets: [{
+          data: hasData ? Object.values(typeCounts) : [35,25,20,12,8],
+          backgroundColor: ['#7c3aed','#06b6d4','#fb7185','#34d399','#fbbf24'],
+          borderWidth: 0, hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true, cutout:'64%',
+        plugins: { legend: { position:'bottom', labels:{ color:tick, padding:14, boxWidth:12 } } }
+      }
+    });
+  }
+
+  const tbody = document.getElementById('activity-log');
+  if (S.activity.length > 0) {
+    tbody.innerHTML = S.activity.slice(0,10).map((a,i) => `
+      <tr>
+        <td style="color:var(--muted)">${i===0?'Just now': i+' min ago'}</td>
+        <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.doc}</td>
+        <td><span style="background:rgba(124,58,237,0.15);color:#c4b5fd;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700">${a.count}</span></td>
+        <td style="color:var(--muted)">${a.time}</td>
+        <td><span class="status-dot"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block"></span> Done</span></td>
+      </tr>`).join('');
+  }
+}
+
+/* =============================================
+   PROVIDER SWITCHING
+   ============================================= */
+document.querySelectorAll('.provider-pill[data-prov]').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.provider-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    S.provider = p.dataset.prov;
+    document.getElementById('stat-model').textContent = S.provider === 'groq' ? 'Groq · Llama 3.3' : 'Claude';
+    persist();
+  });
+});
+
+/* =============================================
+   MODALS
+   ============================================= */
+document.getElementById('apiSetupBtn').addEventListener('click', () => { document.getElementById('modal-api').style.display='flex'; });
+document.getElementById('helpBtn').addEventListener('click', () => { document.getElementById('modal-help').style.display='flex'; });
+
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+
+['modal-api','modal-help'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal(id);
+  });
+});
+
+function saveKeys() {
+  const gk = document.getElementById('modal-groq-key')?.value?.trim();
+  if (gk) { S.groqKey = gk; document.getElementById('groq-key').value = gk; }
+  persist();
+  closeModal('modal-api');
+  toast('✅ Settings saved!', 'success');
+}
+
+document.getElementById('groq-key')?.addEventListener('input', e => { S.groqKey = e.target.value.trim(); persist(); });
+
+// Pre-fill both key fields with hardcoded key
+document.getElementById('groq-key').value = S.groqKey;
+document.getElementById('modal-groq-key').value = S.groqKey;
+
+// Mark Groq provider pill as active on load
+document.querySelectorAll('.provider-pill[data-prov]').forEach(p => {
+  p.classList.toggle('active', p.dataset.prov === 'groq');
+});
+
+/* =============================================
+   ACCENT COLOR SWATCHES
+   ============================================= */
+function setAccent(color, glow) {
+  document.documentElement.style.setProperty('--primary', color);
+  document.documentElement.style.setProperty('--primary-glow', glow);
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+/* =============================================
+   APPEARANCE TOGGLES
+   ============================================= */
+document.getElementById('neural-toggle')?.addEventListener('change', e => {
+  S.particlesOn = e.target.checked;
+  document.getElementById('neural-canvas').style.opacity = S.particlesOn ? '0.55' : '0';
+});
+document.getElementById('anim-toggle')?.addEventListener('change', e => { S.animOn = e.target.checked; });
+document.getElementById('cursor-toggle')?.addEventListener('change', e => {
+  document.getElementById('cursor-glow').style.display = e.target.checked ? 'block' : 'none';
+});
+
+/* =============================================
+   TOAST
+   ============================================= */
+function toast(msg, type='info') {
+  const icons = { info:'fa-circle-info', success:'fa-circle-check', error:'fa-circle-exclamation', warning:'fa-triangle-exclamation' };
+  const colors = { info:'#06b6d4', success:'#34d399', error:'#fb7185', warning:'#fbbf24' };
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.innerHTML = `<i class="fas ${icons[type]||icons.info}" style="color:${colors[type]||colors.info};font-size:1.1rem;flex-shrink:0"></i>
+    <span style="flex:1">${msg}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.style.animation='toastOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
+}
+
+/* =============================================
+   NEURAL PARTICLE CANVAS
+   ============================================= */
+const canvas = document.getElementById('neural-canvas');
+const ctx = canvas.getContext('2d');
+let nodes = [], RAF;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+class Node {
+  constructor() { this.reset(true); }
+  reset(init) {
+    this.x  = Math.random() * canvas.width;
+    this.y  = init ? Math.random() * canvas.height : canvas.height + 10;
+    this.vx = (Math.random()-.5) * 0.4;
+    this.vy = -(Math.random()*0.5+0.1);
+    this.r  = Math.random()*2.5+1;
+    this.op = Math.random()*0.6+0.1;
+    this.col = ['#7c3aed','#06b6d4','#fb7185','#34d399','#fbbf24'][Math.floor(Math.random()*5)];
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.y < -10) this.reset(false);
+    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+  }
+  draw() {
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.fillStyle = this.col; ctx.globalAlpha = this.op;
+    ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+
+function initNodes() {
+  nodes = Array.from({ length: 70 }, () => new Node());
+}
+
+function drawNeural() {
+  if (!S.particlesOn) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  nodes.forEach(n => { n.update(); n.draw(); });
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      const d = Math.hypot(nodes[i].x-nodes[j].x, nodes[i].y-nodes[j].y);
+      if (d < 120) {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = nodes[i].col;
+        ctx.globalAlpha = (1 - d/120) * 0.12;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+  RAF = requestAnimationFrame(drawNeural);
+}
+
+resizeCanvas(); initNodes(); drawNeural();
+window.addEventListener('resize', () => { resizeCanvas(); initNodes(); });
+
+/* =============================================
+   CURSOR GLOW
+   ============================================= */
+const cursorGlow = document.getElementById('cursor-glow');
+document.addEventListener('mousemove', e => {
+  cursorGlow.style.left = e.clientX + 'px';
+  cursorGlow.style.top  = e.clientY + 'px';
+});
+
+/* =============================================
+   SCROLL EFFECTS
+   ============================================= */
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('scroll-bar').style.width = pct + '%';
+  const fab = document.getElementById('fab');
+  fab.style.display = window.scrollY > 400 ? 'flex' : 'none';
+});
+document.getElementById('fab').addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+/* =============================================
+   KEYBOARD SHORTCUTS
+   ============================================= */
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key === 'Enter') { e.preventDefault(); document.getElementById('gen-btn').click(); }
+  if ((e.ctrlKey||e.metaKey) && e.key === 'k')     { e.preventDefault(); document.getElementById('apiSetupBtn').click(); }
+  if (e.key === 'Escape') { ['modal-api','modal-help'].forEach(closeModal); }
+});
+
+/* =============================================
+   UTILITY
+   ============================================= */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* =============================================
+   BOOT
+   ============================================= */
+console.log('%c🧠 QuestionGenius AI Pro', 'color:#7c3aed;font-size:22px;font-weight:900;font-family:monospace');
+console.log('%c⚡ Groq · Llama 3.3-70B · Ctrl+Enter → Generate | Ctrl+K → API Setup', 'color:#06b6d4;font-size:12px');
+
+setTimeout(() => {
+  document.getElementById('ai-badge').innerHTML = `<span class="ping"></span>AI READY · GROQ LLAMA 3.3`;
+}, 800);
+
+</script>
+</body>
+</html>
