@@ -12,8 +12,8 @@ This repository contains the core services required to parse unstructured data (
 
 For a deep dive into the underlying architecture, data flow, and UI/UX workflow, review the technical demonstration below.
 
-demo - https://drive.google.com/file/d/1z0YTn8dp_zQmARKIwPZuO-4uNtfm6ZOQ/view?usp=drive_link
-
+Demo - https://drive.google.com/file/d/1z0YTn8dp_zQmARKIwPZuO-4uNtfm6ZOQ/view?usp=drive_link
+Live Demo - https://questiongenius.netlify.app/
 ---
 
 ## 🏗 System Architecture
