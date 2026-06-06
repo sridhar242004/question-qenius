@@ -45,7 +45,7 @@
 <!-- Replace with your actual demo video or GIF -->
 <div align="center">
 <a href="YOUR_DEMO_VIDEO_URL_HERE">
-  <img src="YOUR_DEMO_THUMBNAIL_OR_GIF_HERE" alt="QuestionGenius Elite Demo" width="80%" style="border-radius:12px; border: 2px solid #6366f1;"/>
+  <img src="Screenshot 2026-06-06 211016.png" alt="QuestionGenius Elite Demo" width="80%" style="border-radius:12px; border: 2px solid #6366f1;"/>
 </a>
 
 <br/><br/>
