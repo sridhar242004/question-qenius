@@ -819,7 +819,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 **Built with 🧠 AI + ⚡ Speed + 🎯 Purpose**
 
 <p>
-  <a href="YOUR_DEMO_URL">🌐 Live Demo</a> ·
+  <a href="https://questiongenius.netlify.app/">🌐 Live Demo</a> ·
   <a href="https://github.com/YOUR_USERNAME/questiongenius-elite/issues">🐛 Report Bug</a> ·
   <a href="https://github.com/YOUR_USERNAME/questiongenius-elite/issues">💡 Request Feature</a>
 </p>
