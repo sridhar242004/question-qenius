@@ -50,7 +50,7 @@
 
 <br/><br/>
 
-> 🎬 **[Watch Full Demo Video →](YOUR_DEMO_VIDEO_URL_HERE)**  
+> 🎬 **[Watch Full Demo Video →](https://questiongenius.netlify.app/)**  
 > Upload a PDF → Configure AI → Get 30 questions in 1.2 seconds
 
 </div>
