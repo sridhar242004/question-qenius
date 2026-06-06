@@ -152,48 +152,6 @@
      │   parseJSON() → unwrap → Array check     │
      └──────────────────────────────────────────┘
 ```
-
-### Data Flow Diagram
-
-```mermaid
-flowchart TD
-    A([User]) -->|Upload PDF/DOCX/TXT\nor Paste Text| B[Document Ingestion]
-
-    B --> C{File Type?}
-    C -->|PDF| D[PDF.js\nPage-by-page extraction\nMax 40 pages]
-    C -->|DOCX| E[Mammoth.js\nRaw text extraction]
-    C -->|TXT| F[FileReader.text API]
-    C -->|Pasted| G[DOM textarea value]
-
-    D & E & F & G --> H[Text Buffer\n≤ 5,000 chars truncated]
-
-    H --> I[Prompt Engineering\nSystem + User message\nJSON schema injection]
-
-    I --> J{Provider\nWaterfall}
-
-    J -->|Primary| K[Groq API\nllama-3.3-70b-versatile\nresponse_format: json_object]
-    K -->|Success| M[JSON Parse\n+ Array Validation]
-    K -->|Failure| L[Anthropic Claude\nclaude-sonnet-4-20250514]
-    L -->|Success| M
-    L -->|Failure| N[SmartFallback\nLocal JS Generator]
-    N --> M
-
-    M --> O[Question Array\nIQuestion[]]
-    O --> P[Render Engine\nbuildCard per type]
-    P --> Q[Results UI\nQ-Cards + Interactivity]
-    Q --> R{User Action}
-
-    R -->|Quiz Mode| S[Interactive Quiz\nScore tracking]
-    R -->|Export| T{Format?}
-    T --> U[JSON / Markdown\nCSV / Plain Text]
-    R -->|Analytics| V[Chart.js\nLine + Doughnut]
-
-    style K fill:#7c3aed,color:#fff
-    style L fill:#00d2ff,color:#000
-    style N fill:#fbbf24,color:#000
-    style O fill:#22c55e,color:#fff
-```
-
 ### Component Architecture
 
 ```
