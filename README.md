@@ -30,7 +30,7 @@
 
 <br/>
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-→%20Try%20Now-c2410c?style=for-the-badge)](https://questiongenius.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-→%20Try%20Now-c2410c?style=for-the-badge)](https://questiongenius-vercel-fixed.vercel.app/)
 [![Documentation](https://img.shields.io/badge/Docs-Read%20Now-0d7377?style=for-the-badge)](https://questiongenius.vercel.app/docs)
 [![Report Bug](https://img.shields.io/badge/Report%20Bug-f43f5e?style=for-the-badge&logo=github)](https://github.com/yourusername/questiongenius/issues/new?template=bug_report.md)
 [![Request Feature](https://img.shields.io/badge/Request%20Feature-d4a373?style=for-the-badge&logo=github)](https://github.com/yourusername/questiongenius/issues/new?template=feature_request.md)
