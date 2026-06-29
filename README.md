@@ -107,15 +107,6 @@ The architecture is deliberately minimal: no React, no Webpack, no TypeScript co
 | API key exposure | Client-side strings | **Server-side env only, never in browser** |
 
 ---
-
-## 🚀 Live Demo & Screenshots
-
-```
-🌐  Landing  ──▶  https://questiongenius.vercel.app
-⚡  App      ──▶  https://questiongenius.vercel.app/try
-📡  Health   ──▶  https://your-backend.railway.app/api/health
-```
-
 <details>
 <summary><b>📸 Interface Preview (expand)</b></summary>
 
